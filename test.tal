@@ -1,0 +1,80 @@
+( hello-2bpp-sprite.tal )
+
+( devices )
+|00 @System  [ &vector $2 &pad $6 &r $2 &g $2 &b $2 ]
+|20 @Screen  [ &vector $2 &width $2 &height $2 &pad $2 &x $2 &y $2 &addr $2 &pixel $1 &sprite $1 ]
+|80 @Controller [ &vector $2 &button $1 &key $1 ]
+|90 @Mouse   [ &vector $2 &x $2 &y $2 &state $1 &pad $3 &scrollx $2 &scrolly $2 ]
+
+(macros )
+%DRAW-brush {;brush .Screen/addr DEO2 ;color1 LDA .Screen/sprite DEO }
+%DRAW-shaded {;shaded .Screen/addr DEO2 #01 .Screen/sprite DEO }
+%DRAW-line {;line .Screen/addr DEO2 #22 .Screen/sprite DEO }
+%INC-X8 { .Screen/x DEI2 #0010 ADD2 .Screen/x DEO2 }
+%INC-Y8 { .Screen/y DEI2 #0010 ADD2 .Screen/y DEO2 }
+%8MOD {#07 AND }
+%WALL-MARGIN { #0010 }
+
+( main program )
+|0100
+       #0c04 .System/r DEO2
+      #01d0 .System/g DEO2
+      #062d .System/b DEO2
+      (#0010 .Screen/x DEO2
+      #0010 .Screen/y DEO2
+      DRAW-brush
+      DRAW-line
+      ;shaded .Screen/addr DEO2
+      ;on-controller .Controller/vector DEO2
+      ;on-mouse .Screen/vector DEO2 )
+      ;draw-background JSR2
+      
+      
+      
+
+BRK
+
+@on-mouse
+      .Mouse/x DEI2 .Screen/x DEO2
+      .Mouse/y DEI2 .Screen/y DEO2
+      ;brush .Screen/addr DEO2
+      #01 .Screen/sprite DEO2
+
+
+BRK
+
+@on-controller
+      ;color1 LDA 01 ADD 8MOD ;color1 STA
+
+BRK
+
+@draw-background ( -- )
+    ;checker .Screen/addr DEO2 
+
+    .Screen/height DEI2 WALL-MARGIN SUB2 
+    WALL-MARGIN 
+     &loop-y
+        DUP2 .Screen/y DEO2 
+        .Screen/width DEI2 #0000
+         &loop-x
+            DUP2 .Screen/x DEO2
+
+            
+            #03 .Screen/sprite DEO
+
+            #0008 ADD2 
+            GTH2k
+            ,&loop-x JCN 
+        POP2 POP2
+
+        #0008 ADD2
+        GTH2k
+        ,&loop-y JCN
+    POP2 POP2
+JMP2r
+
+@brush ffff ffff ffff ffff
+@shaded c0c0 c0c0 c0c0 ffff
+@line 1818 1818 1818 1818
+@checker f0f0 f0f0 0f0f 0f0f
+@color1 01
